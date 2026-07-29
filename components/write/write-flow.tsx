@@ -531,20 +531,41 @@ function StepReceipt({
                   className="sr-only"
                   onChange={pickFile}
                 />
+                {/* The show/hide sits on wrappers, not on the buttons: `Button`
+                    already carries `inline-flex`, and Tailwind emits that after
+                    `.hidden`, so a `hidden` passed through className loses. */}
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => cameraRef.current?.click()}
-                  >
-                    Take a photo
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => inputRef.current?.click()}
-                  >
-                    Upload a file
-                  </Button>
+                  {/* `capture` only means anything on a phone. A desktop
+                      browser ignores it and opens the ordinary file dialog, so
+                      a "Take a photo" button there is a promise the platform
+                      will not keep — show it only where a camera sheet exists. */}
+                  <span className="hidden pointer-coarse:contents">
+                    <Button
+                      type="button"
+                      onClick={() => cameraRef.current?.click()}
+                    >
+                      Take a photo
+                    </Button>
+                  </span>
+                  {/* Same action, two weights: on a phone it sits behind the
+                      camera, on a desktop it is the only way in. */}
+                  <span className="contents pointer-coarse:hidden">
+                    <Button
+                      type="button"
+                      onClick={() => inputRef.current?.click()}
+                    >
+                      Upload a file
+                    </Button>
+                  </span>
+                  <span className="hidden pointer-coarse:contents">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => inputRef.current?.click()}
+                    >
+                      Upload a file
+                    </Button>
+                  </span>
                 </div>
               </>
             )}

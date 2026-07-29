@@ -14,7 +14,8 @@
       "Bash(sips -g pixelWidth -g pixelHeight public/photos/hospital-glass-facade.jpg)",
       "Bash(sips -s format jpeg \"/private/tmp/claude-502/-Users-ankitsulinder-verifiedviews/213b4938-f8a8-4fdd-9121-73d40bb94d0c/scratchpad/clip.png\" --out public/photos/hospital-glass-facade.jpg)",
       "Bash(sips -s format jpeg /private/tmp/claude-502/-Users-ankitsulinder-verifiedviews/213b4938-f8a8-4fdd-9121-73d40bb94d0c/scratchpad/clip2.png --out public/photos/hospital-tower.jpg)",
-      "Bash(node -p \"require\\('tailwindcss/package.json'\\).version\")"
+      "Bash(node -p \"require\\('tailwindcss/package.json'\\).version\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
