@@ -1,26 +1,924 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   VerifiedViews design tokens.
+   The world here is paper — bills, thermal receipts, rubber stamps, ledger
+   columns — printed in the brand's three colours. Ink and the verification
+   states stay unambiguous; the colour lives on the controls and the rules.
+   --------------------------------------------------------------------------- */
+
+/* Hover lift, expressed as custom properties rather than a plain transform.
+
+   A card that scroll-reveals has its `transform` written by the animation,
+   and an animation beats a normal declaration in the cascade — so a
+   `:hover { transform: scale(...) }` would be silently ignored on exactly
+   the cards that animate. Routing the lift through registered properties
+   that the keyframes' end state also reads keeps hover working on animated
+   and static cards alike, without resorting to !important.
+
+   Registering them with @property is what makes them interpolable; an
+   unregistered custom property would jump between values instead of easing. */
+@property --lift-scale {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@property --lift-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Color — trust + freshness.
+       Deep blue  #2563EB  primary: trust, reliability
+       Teal       #14B8A6  secondary: health, cleanliness
+       Green      #22C55E  accent: genuine verification
+       White      #FFFFFF  background
+       Dark grey  #1F2937  text
+
+     The three brand hexes are fill colours: on white they measure 5.2:1,
+     2.4:1 and 2.3:1, so only the blue can legally carry small text. Each one
+     therefore ships as a pair — the exact brand tone for fills, gradients,
+     glows and large marks, and a darker sibling from the same family for type
+     and glyphs. Nothing gets recoloured; the dark twins only appear where a
+     brand tone would have been illegible. */
+  --color-ink: #1f2937; /* text, headers */
+  --color-ink-muted: #6b7280; /* secondary text, unverified figures */
+  --color-paper: #ffffff; /* app background */
+  --color-surface: #ffffff; /* cards */
+  /* With the page and the cards both white, anything that used to read as
+     "inset" — disabled fields, file pickers, empty states, row hovers — had
+     nothing left to sit against. This is that one step down. */
+  --color-sunk: #f8fafc;
+  --color-rule: #e5e7eb; /* hairlines, perforation */
+
+  /* Verification green — the accent, reserved for proof and nothing else. */
+  --color-seal: #15803d; /* badge labels, seal glyphs */
+  --color-seal-bright: #22c55e; /* the brand accent: fills, gradients, glow */
+  --color-seal-tint: #dcfce7; /* verified backgrounds */
+
+  /* States keep their own warm colours — a disputed bill must never read as
+     an ordinary part of the palette. */
+  --color-flag: #b45309;
+  --color-flag-tint: #fef3c7;
+  --color-alert: #b91c1c;
+  --color-alert-tint: #fee2e2;
+  --color-link: #2563eb;
+
+  /* Accent ramp — category colour-coding and gradients. It walks the brand
+     itself, indigo through blue and teal to green, so colour-coding a
+     category can never introduce a hue the theme doesn't already own. */
+  --color-acc-indigo: #4f46e5;
+  --color-acc-indigo-bright: #818cf8;
+  --color-acc-indigo-tint: #e0e7ff;
+  --color-acc-blue: #2563eb; /* primary */
+  --color-acc-blue-bright: #60a5fa;
+  --color-acc-blue-tint: #dbeafe;
+  --color-acc-cyan: #0284c7;
+  --color-acc-cyan-bright: #38bdf8;
+  --color-acc-cyan-tint: #e0f2fe;
+  --color-acc-teal: #0d9488; /* secondary, in its text-safe form */
+  --color-acc-teal-bright: #14b8a6; /* the brand teal */
+  --color-acc-teal-tint: #ccfbf1;
+  --color-acc-emerald: #059669;
+  --color-acc-emerald-bright: #10b981;
+  --color-acc-emerald-tint: #d1fae5;
+
+  /* Type */
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-ledger: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* Scale — 32 / 24 / 20 / 17 / 15 / 13 / 11 */
+  --text-2xs: 0.6875rem; /* 11 */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.8125rem; /* 13 */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.9375rem; /* 15 */
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.0625rem; /* 17 */
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.25rem; /* 20 */
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem; /* 24 */
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 2rem; /* 32 */
+  --text-2xl--line-height: 2.25rem;
+  --text-3xl: 2.75rem; /* display only */
+  --text-3xl--line-height: 3rem;
+
+  /* Space — 4 8 12 16 24 32 48 64 (Tailwind's 1/2/3/4/6/8/12/16 already map) */
+
+  /* Radius — card 12 · pill 999 · input 8 · image 8 */
+  --radius-input: 8px;
+  --radius-image: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  /* Shadow — tinted toward the primary blue rather than neutral grey, so
+     cards lift off the white page instead of smudging it. */
+  --shadow-paper:
+    0 1px 2px rgba(37, 99, 235, 0.06), 0 10px 30px rgba(37, 99, 235, 0.07);
+  --shadow-lift:
+    0 2px 6px rgba(37, 99, 235, 0.08), 0 18px 44px rgba(37, 99, 235, 0.14);
+  --shadow-glow: 0 6px 20px rgba(37, 99, 235, 0.28);
+
+  /* Motion — 120ms enter / 90ms exit, ease-out */
+  --ease-out-quiet: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* The brief says the background is white, so it is white — no wash. On a
+     page whose job is to look like a record, the colour belongs on the
+     controls and the rules, not under the text. */
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  /* Devanagari copy is set in a matched optical size — §9.6 */
+  :lang(hi),
+  :lang(mr) {
+    font-family: var(--font-devanagari), var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  /* §9.5 — visible keyboard focus in the link colour */
+  :focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--color-acc-blue-tint);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Every ₹ amount, date, invoice number and count is set in the ledger face.
+     That one rule does most of the work of making this feel like a product
+     that deals in records rather than opinions. */
+  .ledger {
+    font-family: var(--font-ledger);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Accent ramp swept across type. Reserved for the wordmark and a single
+     word per page — it stops meaning anything if it's everywhere, and a whole
+     headline in five colours is a rainbow, not a brand. */
+  .brand-gradient {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-acc-blue) 0%,
+      var(--color-acc-teal) 55%,
+      var(--color-seal) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Primary action — primary blue into the secondary teal. Deliberately not
+     green: the verification accent has to mean "proved", and it stops meaning
+     that the moment it's also the colour of every button on the page. */
+  .btn-primary {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-acc-blue) 0%,
+      var(--color-acc-teal) 78%,
+      var(--color-acc-teal-bright) 130%
+    );
+    color: #fff;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .btn-primary:hover {
+    filter: saturate(1.15) brightness(1.07);
+  }
+
+  /* Native selects, brought in line with the rest of the controls.
+
+     The chevron is an inline SVG data URI rather than an ::after element,
+     because a select can't host pseudo-elements — it's a replaced element and
+     the browser owns its box. Its stroke is baked to the muted ink value:
+     data URIs can't read currentColor or a custom property, so this is the
+     one place a token gets hard-coded, and it's listed against --color-ink-
+     muted so a change there gets caught in review.
+
+     The dropped-open list itself is drawn by the OS, so its typeface and row
+     height stay out of reach; what's stylable is the closed control, the
+     options' colours, and every interaction state. */
+  .select-field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5 7.75 10 12.25l4.5-4.5' stroke='%236b7280' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 16px;
+    padding-right: 2.25rem;
+    cursor: pointer;
+    transition:
+      border-color 120ms var(--ease-out-quiet),
+      box-shadow 120ms var(--ease-out-quiet),
+      background-color 120ms var(--ease-out-quiet);
+  }
+
+  .select-field:hover {
+    border-color: color-mix(in oklab, var(--color-acc-blue) 45%, transparent);
+    background-color: var(--color-sunk);
+  }
+
+  .select-field:focus-visible {
+    border-color: var(--color-acc-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--color-acc-blue) 22%, transparent);
+  }
+
+  .select-field:disabled {
+    cursor: not-allowed;
+    background-color: var(--color-sunk);
+    color: var(--color-ink-muted);
+  }
+
+  /* Firefox and Chrome on Windows honour these; macOS draws its own list. */
+  .select-field option {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  /* Inside the composed search bar the select has no border of its own — the
+     bar is the control — so it only needs the chevron and the hover tint. */
+  .select-bare {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5.5 7.75 10 12.25l4.5-4.5' stroke='%236b7280' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 16px 16px;
+    padding-right: 1.5rem;
+    cursor: pointer;
+  }
+
+  /* For cards that are themselves a click target — i.e. ones using the
+     stretched-link pattern below, where an inner link's ::after covers the
+     whole card. A card without that overlay must not use this: growing
+     something unclickable promises an interaction that isn't there. */
+  .card-lift {
+    transform: translateY(var(--lift-y)) scale(var(--lift-scale));
+    transition:
+      box-shadow 140ms var(--ease-out-quiet),
+      border-color 140ms var(--ease-out-quiet),
+      --lift-scale 140ms var(--ease-out-quiet),
+      --lift-y 140ms var(--ease-out-quiet);
+  }
+
+  .card-lift:hover {
+    --lift-scale: 1.02;
+    --lift-y: -3px;
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* The click target is an inner link stretched over its positioned ancestor,
+     so the whole card is clickable while the markup stays one honest anchor.
+     The card takes the focus ring, because the ring belongs around the thing
+     that actually responds to Enter — not around six words of link text. */
+  .stretch-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  /* List rows grow the same way cards do, with two differences. The origin is
+     the left edge, so a row expands into the empty space on its right instead
+     of drifting out past the column it's aligned to; and the scale is far
+     smaller, because a full-width row multiplies any scale by its own width —
+     1.02 on a 900px row is an 18px jump, which reads as a glitch. */
+  .row-lift {
+    transform: scale(var(--lift-scale));
+    transform-origin: left center;
+    transition:
+      --lift-scale 130ms var(--ease-out-quiet),
+      background-color 130ms var(--ease-out-quiet),
+      box-shadow 130ms var(--ease-out-quiet);
+  }
+
+  .row-lift:hover {
+    --lift-scale: 1.012;
+    box-shadow: var(--shadow-paper);
+  }
+
+  /* Buttons grow on hover and press back in on click. Scaling type is the one
+     risk here, so 1.03 is the ceiling — past that the label goes soft. */
+  .btn-lift {
+    transform: translateY(var(--lift-y)) scale(var(--lift-scale));
+    transition:
+      --lift-scale 130ms var(--ease-out-quiet),
+      --lift-y 130ms var(--ease-out-quiet),
+      filter 130ms var(--ease-out-quiet),
+      box-shadow 130ms var(--ease-out-quiet),
+      color 130ms var(--ease-out-quiet),
+      background-color 130ms var(--ease-out-quiet),
+      border-color 130ms var(--ease-out-quiet);
+  }
+
+  .btn-lift:hover {
+    --lift-scale: 1.03;
+    --lift-y: -1px;
+  }
+
+  .btn-lift:active {
+    --lift-scale: 0.99;
+    --lift-y: 0px;
+  }
+
+  .btn-lift:disabled {
+    --lift-scale: 1;
+    --lift-y: 0px;
+  }
+
+  /* Gradient hairline under every section heading. border-image can't be
+     rounded, which is fine — these are straight rules. */
+  .rule-gradient {
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(
+        90deg,
+        var(--color-acc-blue) 0%,
+        var(--color-acc-teal-bright) 38%,
+        var(--color-seal-bright) 64%,
+        transparent 92%
+      )
+      1;
+  }
+
+  .rule-gradient-top {
+    border-top: 2px solid transparent;
+    border-image: linear-gradient(
+        90deg,
+        var(--color-acc-blue) 0%,
+        var(--color-acc-teal-bright) 45%,
+        var(--color-seal-bright) 80%,
+        var(--color-acc-emerald-bright) 100%
+      )
+      1;
+  }
+
+  /* Category chips take their colour from an inline --chip, so one class
+     covers the whole ramp and the palette lives in one place. */
+  .chip-accent {
+    border-color: color-mix(in oklab, var(--chip) 32%, transparent);
+    background-color: color-mix(in oklab, var(--chip) 7%, white);
+    color: var(--chip);
+  }
+
+  .chip-accent:hover {
+    border-color: var(--chip);
+    background-color: color-mix(in oklab, var(--chip) 15%, white);
+  }
+
+  /* Set by RevealLock once an element has been seen: the reveal is finished
+     and stays finished, so scrolling back up doesn't run it in reverse. The
+     transform resolves to the identity at rest and to the lifted value while
+     hovered, so locking a card doesn't cost it its hover. */
+  .reveal-done {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateY(var(--lift-y)) scale(var(--lift-scale)) !important;
+  }
+
+  .reveal-rule.reveal-done::after {
+    animation: none !important;
+    transform: scaleX(1) !important;
+  }
+
+  /* Cards that are already on screen when the page loads can't be revealed by
+     scrolling — there is no scroll to drive them, so a view() timeline just
+     paints them at their end state. This runs once, on a timer, and sequences
+     the group by delay. Deliberately outside the @supports gate: it needs no
+     scroll-timeline support, so every browser gets it. */
+  .enter-stagger > * {
+    animation: reveal-scale 440ms var(--ease-out-quiet) both;
+    transform-origin: 50% 85%;
+  }
+
+  .enter-stagger > *:nth-child(1) {
+    animation-delay: 80ms;
+  }
+
+  .enter-stagger > *:nth-child(2) {
+    animation-delay: 170ms;
+  }
+
+  .enter-stagger > *:nth-child(3) {
+    animation-delay: 260ms;
+  }
+
+  .enter-stagger > *:nth-child(4) {
+    animation-delay: 350ms;
+  }
+
+  .enter-stagger > *:nth-child(n + 5) {
+    animation-delay: 440ms;
+  }
+
+  /* A heading rule that draws itself left to right as the section arrives —
+     the reader's eye and the line travel the same direction.
+
+     The static hairline stays on the element's own border, so a browser
+     without view timelines shows an ordinary underline rather than nothing;
+     this only paints the gradient over the top of it. */
+  .reveal-rule {
+    position: relative;
+  }
+
+  .reveal-rule::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    transform: scaleX(1);
+    transform-origin: 0 50%;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-acc-blue) 0%,
+      var(--color-acc-teal-bright) 45%,
+      var(--color-seal-bright) 75%,
+      transparent 100%
+    );
+  }
+
+  /* Nav links stay ink until touched, then take their category's accent. */
+  .nav-accent:hover {
+    color: var(--chip);
+    background-color: color-mix(in oklab, var(--chip) 12%, white);
+  }
+
+  /* Perforated receipt edge. Both edges at once needs a single composited mask —
+     two separate mask-image declarations would overwrite each other. */
+  .perforated {
+    --perf-edges:
+      radial-gradient(circle 5px at 8px -1px, transparent 5px, black 5.5px),
+      radial-gradient(
+        circle 5px at 8px calc(100% + 1px),
+        transparent 5px,
+        black 5.5px
+      );
+    -webkit-mask-image: var(--perf-edges);
+    mask-image: var(--perf-edges);
+    -webkit-mask-size: 16px 100%;
+    mask-size: 16px 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .perforated-top {
+    -webkit-mask-image: radial-gradient(
+      circle 5px at 8px -1px,
+      transparent 5px,
+      black 5.5px
+    );
+    mask-image: radial-gradient(
+      circle 5px at 8px -1px,
+      transparent 5px,
+      black 5.5px
+    );
+    -webkit-mask-size: 16px 100%;
+    mask-size: 16px 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+  }
+
+  .perforated-bottom {
+    -webkit-mask-image: radial-gradient(
+      circle 5px at 8px calc(100% + 1px),
+      transparent 5px,
+      black 5.5px
+    );
+    mask-image: radial-gradient(
+      circle 5px at 8px calc(100% + 1px),
+      transparent 5px,
+      black 5.5px
+    );
+    -webkit-mask-size: 16px 100%;
+    mask-size: 16px 100%;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+  }
+
+  /* Hero backdrop — the one place with ambient motion. Everything here is
+     slow enough to read as paper settling rather than animation: ledger rules
+     creeping up, four accent blooms breathing, a perforation line sliding. */
+  .hero-backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .hero-rules {
+    position: absolute;
+    inset: -40px 0;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--color-rule) 0 1px,
+      transparent 1px 40px
+    );
+    opacity: 0.7;
+    -webkit-mask-image: radial-gradient(
+      85% 70% at 35% 45%,
+      black,
+      transparent 72%
+    );
+    mask-image: radial-gradient(85% 70% at 35% 45%, black, transparent 72%);
+    animation: hero-rules-drift 22s linear infinite;
+  }
+
+  /* Radial gradients rather than blurred blocks — a 40rem filter: blur() on
+     every paint is the one thing that would make this page feel expensive. */
+  .hero-bloom {
+    position: absolute;
+    border-radius: var(--radius-pill);
+    will-change: transform;
+  }
+
+  .hero-bloom-a {
+    top: -26%;
+    right: -8%;
+    width: 42rem;
+    height: 42rem;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--color-acc-blue-bright) 22%, transparent) 0%,
+      transparent 66%
+    );
+    animation: hero-bloom-a 34s var(--ease-out-quiet) infinite alternate;
+  }
+
+  .hero-bloom-b {
+    bottom: -36%;
+    left: -14%;
+    width: 38rem;
+    height: 38rem;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--color-acc-teal-bright) 24%, transparent) 0%,
+      transparent 66%
+    );
+    animation: hero-bloom-b 44s var(--ease-out-quiet) infinite alternate;
+  }
+
+  .hero-bloom-c {
+    top: 22%;
+    left: 26%;
+    width: 30rem;
+    height: 30rem;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--color-seal-bright) 20%, transparent) 0%,
+      transparent 64%
+    );
+    animation: hero-bloom-c 38s var(--ease-out-quiet) infinite alternate;
+  }
+
+  .hero-bloom-d {
+    top: -14%;
+    left: -6%;
+    width: 34rem;
+    height: 34rem;
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--color-acc-cyan-bright) 18%, transparent) 0%,
+      transparent 64%
+    );
+    animation: hero-bloom-d 50s var(--ease-out-quiet) infinite alternate;
+  }
+
+  /* The tear line along the bottom edge of the hero. */
+  .hero-perf {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 16px;
+    opacity: 0.8;
+    background-image: radial-gradient(
+      circle 3px at 8px 50%,
+      var(--color-rule) 2.5px,
+      transparent 3px
+    );
+    background-size: 16px 16px;
+    animation: hero-perf-drift 9s linear infinite;
+  }
+
+  /* Reading-progress bar under the sticky header, driven by the document
+     scroll. Purely decorative, so it never gets a role or a label. */
+  .scroll-progress {
+    position: absolute;
+    inset: auto 0 -2px 0;
+    height: 2px;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background-image: linear-gradient(
+      90deg,
+      var(--color-acc-blue),
+      var(--color-acc-teal-bright) 48%,
+      var(--color-seal-bright)
+    );
+  }
+
+  /* The stamp is the only ornamental thing in the product. */
+  .stamp {
+    transform: rotate(-4deg);
+  }
+
+  .stamp-press {
+    animation: stamp-press 220ms var(--ease-out-quiet) both;
+  }
+}
+
+/* One rule-gap of travel, so the loop point is invisible. */
+@keyframes hero-rules-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(40px);
+  }
+}
+
+@keyframes hero-bloom-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-5%, 7%, 0) scale(1.12);
+  }
+}
+
+@keyframes hero-bloom-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.1);
+  }
+  to {
+    transform: translate3d(7%, -6%, 0) scale(1);
+  }
+}
+
+@keyframes hero-bloom-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.94);
+  }
+  to {
+    transform: translate3d(12%, -9%, 0) scale(1.14);
+  }
+}
+
+@keyframes hero-bloom-d {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.06);
+  }
+  to {
+    transform: translate3d(9%, 10%, 0) scale(0.92);
+  }
+}
+
+@keyframes hero-perf-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 32px 0;
+  }
+}
+
+@keyframes stamp-press {
+  from {
+    transform: scale(1.15) rotate(-1deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(-4deg);
+    opacity: 1;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll-driven motion.
+
+   Everything below is gated behind @supports, and the hidden state only ever
+   exists *inside* that gate. A browser without view timelines (Firefox, at
+   time of writing) renders every section at full opacity rather than a blank
+   page — which is the whole reason this isn't an IntersectionObserver that
+   would take the content down with it if the JS failed to load.
+   --------------------------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Sections rise into place as they enter. The range ends well before the
+       element is centred, so content is settled by the time it's read. */
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 20%;
+    }
+
+    /* Grid and list children stagger by shifting each one's range rather than
+       by delay — a delay means nothing to a timeline driven by position. */
+    .reveal-stagger > * {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 8% cover 18%;
+    }
+
+    .reveal-stagger > *:nth-child(2) {
+      animation-range: entry 8% cover 22%;
+    }
+
+    .reveal-stagger > *:nth-child(3) {
+      animation-range: entry 8% cover 26%;
+    }
+
+    .reveal-stagger > *:nth-child(4) {
+      animation-range: entry 8% cover 30%;
+    }
+
+    .reveal-stagger > *:nth-child(5) {
+      animation-range: entry 8% cover 34%;
+    }
+
+    .reveal-stagger > *:nth-child(n + 6) {
+      animation-range: entry 8% cover 38%;
+    }
+
+    /* One-by-one along the section, not one-per-element.
+       `.reveal-stagger` gives every child its own view() timeline, so a child
+       animates when *it* enters the viewport — two items in the same grid row
+       therefore arrive together, and the stagger only changes how long each
+       takes. Here the container publishes a single named timeline and every
+       child animates against that one, on its own slice of it. The result is
+       a genuine queue: item two waits for item one no matter where the two
+       sit relative to each other. */
+    .reveal-sequence {
+      view-timeline-name: --vv-seq;
+    }
+
+    .reveal-sequence > * {
+      animation: reveal linear both;
+      animation-timeline: --vv-seq;
+      animation-range: cover 4% cover 15%;
+    }
+
+    .reveal-sequence > *:nth-child(2) {
+      animation-range: cover 10% cover 21%;
+    }
+
+    .reveal-sequence > *:nth-child(3) {
+      animation-range: cover 16% cover 27%;
+    }
+
+    .reveal-sequence > *:nth-child(4) {
+      animation-range: cover 22% cover 33%;
+    }
+
+    .reveal-sequence > *:nth-child(5) {
+      animation-range: cover 28% cover 39%;
+    }
+
+    .reveal-sequence > *:nth-child(6) {
+      animation-range: cover 34% cover 45%;
+    }
+
+    .reveal-sequence > *:nth-child(n + 7) {
+      animation-range: cover 40% cover 51%;
+    }
+
+    .reveal-rule::after {
+      animation: draw-rule linear both;
+      animation-timeline: view();
+      animation-range: entry 16% cover 26%;
+    }
+
+    /* Cards grow into place instead of sliding. 0.94 rather than something
+       smaller: a card that starts at half size reads as a notification
+       popping in, and the text inside it goes blurry while it scales. */
+    .reveal-scale {
+      animation: reveal-scale linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 22%;
+      transform-origin: 50% 85%;
+    }
+
+    .reveal-scale-stagger > * {
+      animation: reveal-scale linear both;
+      animation-timeline: view();
+      animation-range: entry 8% cover 20%;
+      transform-origin: 50% 85%;
+    }
+
+    .reveal-scale-stagger > *:nth-child(2) {
+      animation-range: entry 8% cover 24%;
+    }
+
+    .reveal-scale-stagger > *:nth-child(3) {
+      animation-range: entry 8% cover 28%;
+    }
+
+    .reveal-scale-stagger > *:nth-child(n + 4) {
+      animation-range: entry 8% cover 32%;
+    }
+  }
+
+  /* The progress bar is not motion for its own sake — it answers "how much of
+     this page is left", so it runs even under reduced-motion. */
+  .scroll-progress {
+    animation: scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    /* Resolves to the identity transform at rest, and to the lifted one while
+       hovered — which is how hover survives a filled animation. */
+    transform: translateY(var(--lift-y)) scale(var(--lift-scale));
+  }
+}
+
+/* Origin sits low on the card, so it grows up out of the page rather than
+   expanding from its middle in both directions. */
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(var(--lift-y)) scale(var(--lift-scale));
+  }
+}
+
+@keyframes draw-rule {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes scroll-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* §9.2 — everything respects prefers-reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exception: a scroll timeline reads duration as a fraction of its range, so
+     the blanket 0.01ms above would peg the progress bar to full on load. It
+     tracks position rather than animating on its own, so it stays. */
+  .scroll-progress {
+    animation-duration: auto !important;
+  }
+
+  .enter-stagger > * {
+    animation-delay: 0ms !important;
+  }
 }

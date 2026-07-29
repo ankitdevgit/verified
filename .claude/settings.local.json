@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next *)",
+      "Bash(npx eslint *)",
+      "Bash(lsof -ti:3000 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(npm run *)",
+      "Read(//Applications/Google Chrome.app/**)",
+      "Read(//Users/ankitsulinder/Library/Caches/**)",
+      "Bash(node -e \"console.log\\('WebSocket' in globalThis\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(python3 -)",
+      "Bash(pkill -f \"remote-debugging-port=9222\")",
+      "Bash(lsof -ti:9222 -sTCP:LISTEN)",
+      "Bash(NEXT_PUBLIC_API_BASE_URL=https://api.example.test/v1 npx next build)",
+      "Bash(NEXT_PUBLIC_API_BASE_URL= npx next build)",
+      "Bash(lsof -ti:3000 -ti:3001)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(pkill -f \"next start\")",
+      "Bash(pkill -f \"next-server\")",
+      "Bash(lsof -ti:3000,3001,3002)",
+      "Bash(curl -s -m 60 -o /dev/null -w \"/write: HTTP %{http_code}\\\\n\" http://localhost:3000/write)",
+      "Bash(npx prettier *)",
+      "Bash(curl -s -m 60 -o /tmp/claude-502/-Users-ankitsulinder-verifiedviews/89f98b1a-9a8e-4c7d-843a-11bef3519c3a/scratchpad/rev2.html -w \"homepage: HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(grep -n '\"/\\\\|`/' lib/api/mock-transport.ts)",
+      "Bash(python3 -c \"import docx; print\\('python-docx', docx.__version__ if hasattr\\(docx,'__version__'\\) else 'ok'\\)\")",
+      "Bash(python3 -m venv venv)",
+      "Bash(./venv/bin/pip install *)",
+      "Bash(./venv/bin/python -c \"import docx; print\\('ok'\\)\")",
+      "Bash(./venv/bin/python md2docx.py /Users/ankitsulinder/verifiedviews)",
+      "Bash(./venv/bin/python -)"
+    ]
+  }
+}
