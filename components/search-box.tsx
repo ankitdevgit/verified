@@ -1,6 +1,5 @@
 import Form from "next/form";
 import { CITIES } from "@/lib/data";
-import { SITE } from "@/lib/site";
 
 /**
  * Search-first, per §8.1. `next/form` gives client-side navigation and
@@ -9,7 +8,9 @@ import { SITE } from "@/lib/site";
  */
 export function SearchBox({
   defaultQuery = "",
-  defaultCity = SITE.launchCity,
+  /* Empty means every city. Pre-selecting one quietly hides two-thirds of the
+     index from someone who never opened the dropdown. */
+  defaultCity = "",
   size = "lg",
 }: {
   defaultQuery?: string;
@@ -54,6 +55,7 @@ export function SearchBox({
             tall ? "py-4 text-base" : "py-3 text-sm"
           }`}
         >
+          <option value="">All cities</option>
           {CITIES.map((c) => (
             <option key={c} value={c}>
               {c}

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
+import { PhotoImage } from "./photo-image";
 import { PlaceholderMark } from "./placeholder-mark";
+import type { BusinessPhoto } from "@/lib/types";
 
 /* §9.3 — Primary (seal fill), Secondary (outline), Ghost, Destructive.
    48px minimum height everywhere, per the accessibility rules in §9.5. */
@@ -108,10 +110,15 @@ export function PhotoBlock({
   seed,
   className = "",
   label,
+  photo,
+  sizes = "(max-width: 640px) 100vw, 33vw",
 }: {
   seed: number;
   className?: string;
   label?: string;
+  /** When absent, the tinted placeholder stands in. */
+  photo?: BusinessPhoto;
+  sizes?: string;
 }) {
   const hue = 150 + ((seed * 37) % 76);
   return (
@@ -122,10 +129,21 @@ export function PhotoBlock({
           hue + 24
         } 44% 87%))`,
       }}
-      role={label ? "img" : "presentation"}
-      aria-label={label}
+      role={!photo && label ? "img" : "presentation"}
+      aria-label={photo ? undefined : label}
     >
+      {/* Always rendered, always underneath — it is what shows through when the
+          listing has no photo, and when the photo fails to load. */}
       <PlaceholderMark className="h-[64%] w-[64%] text-acc-teal-bright" />
+      {photo ? (
+        <PhotoImage
+          photo={photo}
+          /* Decorative in a row that already names the business; the label is
+             only worth reading out on the profile hero. */
+          alt={label ?? ""}
+          sizes={sizes}
+        />
+      ) : null}
     </div>
   );
 }

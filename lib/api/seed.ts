@@ -242,6 +242,33 @@ export const CATEGORY_DTOS: CategoryDto[] = [
 /* Businesses — GET /businesses/:idOrSlug                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Stand-in premises imagery until listings carry their own uploads. The pool is
+ * small and deliberately reused across listings; `pic()` just keeps the seed
+ * rows readable. Labs and the dentist keep `url: null` so the placeholder path
+ * stays exercised.
+ */
+const PIC = {
+  hospitalGlass: "/photos/hospital-glass-facade.jpg",
+  hospitalStreet: "/photos/hospital-street.jpg",
+  hospitalTower: "/photos/hospital-tower.jpg",
+  hospitalCivic: "/photos/hospital-civic-block.jpg",
+  clinicInterior: "/photos/clinic-interior.jpg",
+} as const;
+
+function pic(
+  id: string,
+  seed: number,
+  urls: string[],
+): NonNullable<BusinessDto["photos"]> {
+  return urls.map((url, i) => ({
+    id: `${id}-${i + 1}`,
+    url,
+    seed: seed + i * 3,
+    fit: url.endsWith("-logo.png") ? ("contain" as const) : ("cover" as const),
+  }));
+}
+
 export const BUSINESS_DTOS: BusinessDto[] = [
   {
     id: "01J8RUBY",
@@ -281,7 +308,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 318,
     },
     can_review: true,
-    photos: [{ id: "m1", url: null, seed: 11 }],
+    photos: pic("m1", 11, [
+      PIC.hospitalGlass,
+      PIC.hospitalStreet,
+      PIC.hospitalTower,
+    ]),
   },
   {
     id: "01J8SAHY",
@@ -322,7 +353,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
     },
     can_review: true,
     solicits_reviews: true,
-    photos: [{ id: "m2", url: null, seed: 24 }],
+    photos: pic("m2", 24, [
+      PIC.hospitalStreet,
+      PIC.hospitalTower,
+      PIC.hospitalCivic,
+    ]),
   },
   {
     id: "01J8JEHA",
@@ -362,7 +397,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 207,
     },
     can_review: true,
-    photos: [{ id: "m3", url: null, seed: 37 }],
+    photos: pic("m3", 37, [
+      PIC.hospitalTower,
+      PIC.hospitalGlass,
+      PIC.hospitalStreet,
+    ]),
   },
   {
     id: "01J8DEEN",
@@ -402,7 +441,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 389,
     },
     can_review: true,
-    photos: [{ id: "m4", url: null, seed: 42 }],
+    photos: pic("m4", 42, [
+      PIC.hospitalGlass,
+      PIC.hospitalCivic,
+      PIC.hospitalTower,
+    ]),
   },
   {
     id: "01J8KEMH",
@@ -442,7 +485,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 96,
     },
     can_review: true,
-    photos: [{ id: "m5", url: null, seed: 58 }],
+    photos: pic("m5", 58, [
+      PIC.hospitalStreet,
+      PIC.hospitalGlass,
+      PIC.hospitalTower,
+    ]),
   },
   {
     id: "01J8ADIT",
@@ -482,7 +529,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 74,
     },
     can_review: true,
-    photos: [{ id: "m6", url: null, seed: 63 }],
+    photos: pic("m6", 63, [
+      PIC.hospitalTower,
+      PIC.hospitalStreet,
+      PIC.hospitalCivic,
+    ]),
   },
   {
     id: "01J8SHAH",
@@ -522,7 +573,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 88,
     },
     can_review: true,
-    photos: [{ id: "m7", url: null, seed: 71 }],
+    photos: pic("m7", 71, [
+      PIC.clinicInterior,
+      PIC.hospitalGlass,
+      PIC.hospitalStreet,
+    ]),
   },
   {
     id: "01J8APEX",
@@ -564,7 +619,11 @@ export const BUSINESS_DTOS: BusinessDto[] = [
       based_on_receipts: 3,
     },
     can_review: true,
-    photos: [{ id: "m8", url: null, seed: 84 }],
+    photos: pic("m8", 84, [
+      PIC.clinicInterior,
+      PIC.hospitalTower,
+      PIC.hospitalStreet,
+    ]),
   },
   {
     id: "01J8METR",

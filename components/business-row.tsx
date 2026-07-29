@@ -25,6 +25,8 @@ export async function BusinessRow({ business }: { business: Business }) {
       >
         <PhotoBlock
           seed={business.photoSeed}
+          photo={business.photos[0]}
+          sizes="96px"
           className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
         />
         <div className="min-w-0 flex-1">

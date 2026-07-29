@@ -92,6 +92,10 @@ export function toBusiness(dto: BusinessDto): Business {
     canReview: dto.can_review,
     solicitsReviews: dto.solicits_reviews,
     photoSeed: dto.photos?.[0]?.seed ?? 1,
+    photos:
+      dto.photos?.flatMap((p) =>
+        p.url ? [{ url: p.url, fit: p.fit ?? ("cover" as const) }] : [],
+      ) ?? [],
   };
 }
 

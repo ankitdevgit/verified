@@ -52,12 +52,15 @@ export default async function HomePage() {
             <SearchBox />
           </div>
 
-          <p className="ledger mt-5 text-sm text-ink-muted">
-            {formatNumber(stats.billsVerified)} bills verified
-            <span className="mx-3 text-rule" aria-hidden="true">
+          {/* Each count stays glued to its label — the numbers are tabular and
+              wide, so a plain inline run breaks between "1,02,884" and
+              "reviews" on a phone. Stack the two stats instead. */}
+          <p className="ledger mt-5 flex flex-col gap-y-1 text-sm text-ink-muted sm:flex-row sm:items-center sm:gap-x-3">
+            <span>{formatNumber(stats.billsVerified)} bills verified</span>
+            <span className="hidden text-rule sm:inline" aria-hidden="true">
               ·
             </span>
-            {formatNumber(stats.reviewsPublished)} reviews
+            <span>{formatNumber(stats.reviewsPublished)} reviews</span>
           </p>
 
           {/* The pitch is a contrast, so the hero is a contrast. §8.1 */}

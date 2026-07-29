@@ -122,6 +122,14 @@ export interface Business {
   /** Set when solicitation is detected — §10, IS 19000:2022 practice. */
   solicitsReviews?: boolean;
   photoSeed: number;
+  /** Real premises imagery where we have it; empty falls back to the tinted
+      placeholder block, which is what an unclaimed listing looks like. */
+  photos: BusinessPhoto[];
+}
+
+export interface BusinessPhoto {
+  url: string;
+  fit: "cover" | "contain";
 }
 
 export interface BusinessReply {

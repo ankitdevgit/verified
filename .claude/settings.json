@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(ls -lt ~/Downloads ~/Desktop 2>/dev/null | head -40)",
+      "Read(//Users/ankitsulinder/Downloads/**)",
+      "Bash(chmod +x scripts/save-photo.sh)",
+      "Bash(find \"/private/tmp/claude-502\" -type f \\\\\\( -name \"*.png\" -o -name \"*.jpg\" -o -name \"*.jpeg\" -o -name \"*.webp\" \\\\\\) -newermt \"-2 hours\" 2>/dev/null | head -20; echo \"--- var folders ---\"; find /var/folders -maxdepth 6 -type f \\\\\\( -name \"*.png\" -o -name \"*.jpg\" \\\\\\) -newermt \"-30 minutes\" 2>/dev/null | head -20)",
+      "Read(//private/tmp/claude-502/**)",
+      "Read(//private/var/folders/**)",
+      "Bash(./scripts/save-photo.sh clinic-interior.jpg)",
+      "Bash(sips -g pixelWidth -g pixelHeight public/photos/hospital-street.jpg)",
+      "Bash(./scripts/save-photo.sh hospital-glass-facade.jpg)",
+      "Bash(sips -g pixelWidth -g pixelHeight public/photos/hospital-glass-facade.jpg)",
+      "Bash(sips -s format jpeg \"/private/tmp/claude-502/-Users-ankitsulinder-verifiedviews/213b4938-f8a8-4fdd-9121-73d40bb94d0c/scratchpad/clip.png\" --out public/photos/hospital-glass-facade.jpg)",
+      "Bash(sips -s format jpeg /private/tmp/claude-502/-Users-ankitsulinder-verifiedviews/213b4938-f8a8-4fdd-9121-73d40bb94d0c/scratchpad/clip2.png --out public/photos/hospital-tower.jpg)"
+    ]
+  }
+}

@@ -241,7 +241,13 @@ export interface BusinessDto {
   can_review: boolean;
   /** IS 19000:2022 solicitation disclosure — §10 of the design doc. */
   solicits_reviews?: boolean;
-  photos?: { id: string; url: string | null; seed?: number }[];
+  photos?: {
+    id: string;
+    url: string | null;
+    seed?: number;
+    /** Logos need letterboxing; premises photos fill the frame. */
+    fit?: "cover" | "contain";
+  }[];
 }
 
 /* -------------------------------------------------------------------------- */

@@ -9,7 +9,6 @@ import { search } from "@/lib/api/endpoints";
 import "@/lib/api/mock-transport";
 import { parseFilters, specialitiesIn, toSearchQuery } from "@/lib/filters";
 import { formatNumber } from "@/lib/format";
-import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -20,7 +19,10 @@ export const metadata: Metadata = {
 export default async function SearchPage(props: PageProps<"/search">) {
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q : "";
-  const city = typeof params.city === "string" ? params.city : SITE.launchCity;
+  // Absent city means every city — the search service skips the filter rather
+  // than falling back to the launch city.
+  const city = typeof params.city === "string" ? params.city : "";
+  const inCity = city ? ` in ${city}` : "";
   const filters = parseFilters(params);
 
   // The search service applies the filters and the sort — §8.3. Doing it here
@@ -54,8 +56,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
             {" "}
             matching <span className="font-medium text-ink">{q}</span>
           </>
-        ) : null}{" "}
-        in {city}
+        ) : null}
+        {inCity || " across every city"}
         {results.has_more && " · showing the first 100"}
       </p>
 
@@ -64,8 +66,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
           <EmptyState
             title={
               q
-                ? `Nothing matching “${q}” in ${city}.`
-                : `Nothing here in ${city} yet.`
+                ? `Nothing matching “${q}”${inCity}.`
+                : `Nothing here${inCity} yet.`
             }
             body={
               filters.verifiedOnly

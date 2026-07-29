@@ -85,11 +85,23 @@ export default async function BusinessProfilePage(
       <div className="reveal-scale-stagger mt-4 grid gap-3 sm:grid-cols-4">
         <PhotoBlock
           seed={business.photoSeed}
+          photo={business.photos[0]}
+          sizes="(max-width: 640px) 100vw, 512px"
           className="h-44 sm:col-span-2 sm:h-56"
           label={`Photo of ${business.name}`}
         />
-        <PhotoBlock seed={business.photoSeed + 3} className="hidden h-56 sm:block" />
-        <PhotoBlock seed={business.photoSeed + 7} className="hidden h-56 sm:block" />
+        <PhotoBlock
+          seed={business.photoSeed + 3}
+          photo={business.photos[1]}
+          sizes="256px"
+          className="hidden h-56 sm:block"
+        />
+        <PhotoBlock
+          seed={business.photoSeed + 7}
+          photo={business.photos[2]}
+          sizes="256px"
+          className="hidden h-56 sm:block"
+        />
       </div>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_20rem]">
