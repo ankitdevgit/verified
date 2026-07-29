@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { Seal } from "@/components/seal";
 import { StarInput } from "@/components/star-input";
@@ -345,11 +345,22 @@ function StepReceipt({
   onNext: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
   const [mismatch, setMismatch] = useState<{
     billedName: string;
     billedSlug?: string;
   } | null>(null);
   const place = businesses.find((b) => b.slug === placeSlug);
+
+  /**
+   * Clearing the input matters: after a failed read, picking the very same
+   * file again fires no `change` event, so the retry silently does nothing.
+   */
+  function pickFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    handleFile(file);
+  }
 
   async function handleFile(file: File | undefined) {
     if (!file || !place) return;
@@ -499,20 +510,40 @@ function StepReceipt({
                   Hold the bill flat and fill the frame. Photo or PDF, up to{" "}
                   <span className="ledger">{MAX_UPLOAD_MB}MB</span>.
                 </p>
+                {/* Two inputs, not one. `capture` is a demand, not a hint:
+                    iOS Safari opens the camera and drops Photo Library and
+                    Files from the sheet entirely, so a single capture input
+                    leaves anyone with an already-photographed or emailed bill
+                    stuck. The camera path keeps `capture`; the upload path
+                    must not have it. */}
+                <input
+                  ref={cameraRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="sr-only"
+                  onChange={pickFile}
+                />
                 <input
                   ref={inputRef}
                   type="file"
                   accept="image/*,application/pdf"
-                  capture="environment"
                   className="sr-only"
-                  onChange={(e) => handleFile(e.target.files?.[0])}
+                  onChange={pickFile}
                 />
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
                   <Button
                     type="button"
+                    onClick={() => cameraRef.current?.click()}
+                  >
+                    Take a photo
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
                     onClick={() => inputRef.current?.click()}
                   >
-                    Take a photo or upload
+                    Upload a file
                   </Button>
                 </div>
               </>
